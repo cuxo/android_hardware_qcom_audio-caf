@@ -1320,13 +1320,11 @@ bool AudioPolicyManager::isOffloadSupported(const audio_offload_info_t& offloadI
             return false;
         }
     } else if (offloadInfo.duration_us < OFFLOAD_DEFAULT_MIN_DURATION_SECS * 1000000) {
+        ALOGD("copl: Offload denied by duration < default min(=%u)", OFFLOAD_DEFAULT_MIN_DURATION_SECS);
         //duration checks only valid for MP3/AAC formats,
         //do not check duration for other audio formats, e.g. dolby AAC/AC3 and amrwb+ formats
-        if (!offloadInfo.has_video && (offloadInfo.format == AUDIO_FORMAT_MP3 || offloadInfo.format == AUDIO_FORMAT_AAC || pcmOffload)) {
-
-            ALOGD("copl: Offload denied by duration < default min(=%u)", OFFLOAD_DEFAULT_MIN_DURATION_SECS);
+        if (offloadInfo.format == AUDIO_FORMAT_MP3 || offloadInfo.format == AUDIO_FORMAT_AAC || pcmOffload)
             return false;
-        }
     }
 
     // Do not allow offloading if one non offloadable effect is enabled. This prevents from
@@ -1339,6 +1337,16 @@ bool AudioPolicyManager::isOffloadSupported(const audio_offload_info_t& offloadI
         return false;
     }
 
+    // Check for soundcard status
+    String8 valueStr = mpClientInterface->getParameters((audio_io_handle_t)0,
+                                 String8(AUDIO_PARAMETER_KEY_SND_CARD_STATUS));
+    AudioParameter result = AudioParameter(valueStr);
+    int isonline = 0;
+    if ((result.getInt(String8(AUDIO_PARAMETER_KEY_SND_CARD_STATUS), isonline) == NO_ERROR)
+           && !isonline) {
+        ALOGD("copl: soundcard is offline rejecting offload request");
+        return false;
+    }
     // See if there is a profile to support this.
     // AUDIO_DEVICE_NONE
     IOProfile *profile = getProfileForDirectOutput(AUDIO_DEVICE_NONE /*ignore device */,
