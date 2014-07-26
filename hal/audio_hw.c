@@ -228,6 +228,7 @@ static int get_snd_codec_id(audio_format_t format)
 {
     int id = 0;
 
+#ifdef ENABLE_AV_ENHANCEMENTS
     switch (format) {
     case AUDIO_FORMAT_MP3:
         id = SND_AUDIOCODEC_MP3;
@@ -235,15 +236,19 @@ static int get_snd_codec_id(audio_format_t format)
     case AUDIO_FORMAT_AAC:
         id = SND_AUDIOCODEC_AAC;
         break;
+#ifdef WMA_OFFLOAD_ENABLED
     case AUDIO_FORMAT_WMA:
         id = SND_AUDIOCODEC_WMA;
         break;
     case AUDIO_FORMAT_WMA_PRO:
         id = SND_AUDIOCODEC_WMA_PRO;
         break;
+#endif
+#ifdef MP2_OFFLOAD_ENABLED
     case AUDIO_FORMAT_MP2:
         id = SND_AUDIOCODEC_MP2;
         break;
+#endif
     case AUDIO_FORMAT_PCM_16_BIT_OFFLOAD:
     case AUDIO_FORMAT_PCM_24_BIT_OFFLOAD:
         id = SND_AUDIOCODEC_PCM;
@@ -256,6 +261,7 @@ static int get_snd_codec_id(audio_format_t format)
     default:
         ALOGE("%s: Unsupported audio format :%x", __func__, format);
     }
+#endif // ENABLE_AV_ENHANCEMENTS
 
     return id;
 }
